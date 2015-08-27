@@ -18,6 +18,7 @@ import os
 import argparse
 import sys
 import logging
+import pdb
 
 xdg_config = os.environ.get('XDG_CONFIG_HOME')
 CONFIG_PATH = os.path.join(xdg_config, "jrnl") if xdg_config else os.path.expanduser('~/.jrnl_config')
@@ -33,6 +34,7 @@ def parse_args(args=None):
 
     composing = parser.add_argument_group('Composing', 'To write an entry simply write it on the command line, e.g. "jrnl yesterday at 1pm: Went to the gym."')
     composing.add_argument('text', metavar='', nargs="*")
+    composing.add_argument('--template',metavar='FILENAME', dest="template", help='Opens your editor to edit the selected entries.',  nargs='?', default=False, const=None )
 
     reading = parser.add_argument_group('Reading', 'Specifying either of these parameters will display posts of your journal')
     reading.add_argument('-from', dest='start_date', metavar="DATE", help='View entries after this date')
@@ -204,7 +206,11 @@ def run(manual_args=None):
             # Piping data into jrnl
             raw = util.py23_read()
         elif config['editor']:
-            raw = util.get_text_from_editor(config)
+            content = ''
+            if args.template:
+                if os.path.exists(args.template):
+                    content =  open(args.template).read()
+            raw = util.get_text_from_editor(config, content)
         else:
             try:
                 raw = util.py23_read("[Compose Entry; " + _exit_multiline_code + " to finish writing]\n")
